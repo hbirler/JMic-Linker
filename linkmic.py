@@ -4,6 +4,7 @@ import argparse
 
 ASMDIR = "asm"
 MICDIR = "mic"
+OUTDIR = "out"
 
 def processmicro(outfname):
 	for fname in glob.glob(outfname):
@@ -60,8 +61,13 @@ def processmicro(outfname):
 				continue
 			
 			mind = int(cs[0], 16)
-			if mind % 16 == 0 and lind % 16 != 0:
-				lind = (lind // 16 + 1) * 16
+			#if mind % 16 == 0 and lind % 16 != 0:
+			#	lind = (lind // 16 + 1) * 16
+			if mind % 16 != lind % 16:
+				ollin = lind
+				lind = (lind // 16) * 16 + mind % 16
+				if lind < ollin:
+					lind += 16
 				
 			newposs[mind] = lind
 			
@@ -112,18 +118,20 @@ def processmicro(outfname):
 
 	mikropro += "register:\n0000\n0000\n0000\n0000\n0000\n0000\n0000\n0000\n0000\n0000\n0000\n0000\n0000\n0000\n0000\n0000\n0000\nbefehlszaehler:\n0000\n000"
 	
-	if not os.path.exists("output"):
-		os.makedirs("output")
+	if not os.path.exists(OUTDIR):
+		os.makedirs(OUTDIR)
 	
-	with open(os.path.join("output", os.path.splitext(os.path.basename(outfname))[0] + ".mpr"), "w") as text_file:
+	with open(os.path.join(OUTDIR, os.path.splitext(os.path.basename(outfname))[0] + ".mpr"), "w") as text_file:
 		text_file.write(mikropro)
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser(description='Link mpr files')
 	parser.add_argument('--asmdir', help='Directory of asm files', default = ASMDIR)
 	parser.add_argument('--micdir', help='Directory of mpr files', default = MICDIR)
+	parser.add_argument('--outdir', help='Directory of output files', default = OUTDIR)
 	args = parser.parse_args()
 	ASMDIR = args.asmdir
 	MICDIR = args.micdir
+	OUTDIR = args.outdir
 	for fname in glob.glob(os.path.join(ASMDIR, "*.asm")):
 		processmicro(fname)
